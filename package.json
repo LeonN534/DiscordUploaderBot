@@ -1,0 +1,26 @@
+{
+  "name": "uploader-bot",
+  "version": "1.0.0",
+  "description": "A discord bot that detects the files uploaded to a Discord channel and uploads it to a VPS.",
+  "main": ".src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ftp",
+    "sftp",
+    "Discord",
+    "discord",
+    "bot",
+    "files",
+    "upload"
+  ],
+  "author": "LeonN534",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "discord.js": "^14.11.0"
+  }
+}
