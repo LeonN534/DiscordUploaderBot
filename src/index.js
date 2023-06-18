@@ -5,7 +5,7 @@ import {GREETING_MESSAGE, SET_CHANNEL_COMMAND, SET_SERVER_IP_COMMAND, SET_SERVER
 dotenv.config();
 
 let botUserAdmin;
-let channelToListen, serverIp, serverPass, serverPort;
+let channelToListen, serverIp, serverPass, serverPort = '21';
 
 const client = new Client({
     intents: [
@@ -71,8 +71,12 @@ client.on('messageCreate', async (message) => {
             command = message.content.split(" ");
         } else if(message.content.startsWith(SET_SERVER_PASSWORD_COMMAND)) {
             command = message.content.split(" ");
+            if(command[2] == "" || command[2] == undefined) return;
+            serverPass = command[2];
         } else if(message.content.startsWith(SET_SERVER_PORT_COMMAND)) {
             command = message.content.split(" ");
+            if(command[2] == "" || command[2] == undefined || !Number.isInteger(Number(command[2]))) return;
+            serverPort = command[2];
         }
     }
 
