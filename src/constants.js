@@ -1,6 +1,6 @@
 const GREETING_MESSAGE = `Hello!
 Thanks for adding me to your server!
-In order to be able to upload to start uploading files to your VPS you need to set me up first.
+In order to be able to start uploading files to your VPS you need to set me up first.
 Here are the commands you need to set before using me:`;
 
 const SET_CHANNEL_COMMAND = `!set channel`;
