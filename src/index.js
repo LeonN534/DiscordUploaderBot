@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import {createHmac} from 'crypto';
 import {Client, GatewayIntentBits, Partials, codeBlock} from 'discord.js';
 import {
     GREETING_MESSAGE, 
@@ -13,6 +14,12 @@ import {
 dotenv.config();
 
 let botUserAdmin;
+let botWaitMode = false;
+let botDataCounter = 1;
+
+const CRYTOP_ALGORITHM = 'aes-256-cbc';
+const CRYTOP_KEY = crypto.randomBytes(32);
+const CRYTOP_IV = crypto.randomBytes(16);
 
 const data = {
     channelToListen,
@@ -61,47 +68,93 @@ client.on("guildCreate", guild => {
 });
 
 client.on('messageCreate', async (message) => {
-    if(message == undefined) return;
-    if(message.author.id !== process.env.TESTING_USER) return;
-    if(message.guild == null) {
-        let command = [];
-        if(message.content.startsWith(SET_CHANNEL_COMMAND)) {
-            command = message.content.split(" ");
-            if(command[2] == "" || command[2] == undefined) return;
+    // Check for DM messages from the BotAdmin 
+    if(message.guild == null && message.author.id == process.env.TESTING_USER) {
+        
+        // Check if the bot is waiting for the username or password (Waiting mode)
+        if(botWaitMode) {
+            let auxUsername, auxPassword;
+            //Check if the bot is waiting either for the username or the password
+            switch(botDataCounter) {
+                case 1:
+                    auxUsername = message.content;
+                    botDataCounter++;
+                    break;
+                case 2:
+                    auxPassword = message.content;
+                    data.serverUsers.push({
+                        name: `${auxUsername}`,
+                        password: `${encrypt(auxPassword)}`
+                    });
+                    botDataCounter = 1; // Reset the counter to start waiting for the username in the next wait mode
+                    botWaitMode = false; // Exit wait mode
+                    break;
+                default: 
+                    console.log("An unexpected error has occurred.")
+            }
+        } else {
+            let command = [];
+            if(message.content.startsWith(SET_CHANNEL_COMMAND)) {
+                command = message.content.split(" ");
+                if(command[2] == "" || command[2] == undefined) return;
 
-            client.channels.fetch(command[2]).then(
-                (value) => {
-                    if(value.type == 0) {
-                        data.channelToListen = value.id;
-                        botUserAdmin.send(`Channel succesfully set! :smiley:`);
-                    } else {
-                        botUserAdmin.send(`That's not a valid text channel! :cry:`);
+                client.channels.fetch(command[2]).then(
+                    (value) => {
+                        if(value.type == 0) {
+                            data.channelToListen = value.id;
+                            botUserAdmin.send(`Channel succesfully set! :smiley:`);
+                        } else {
+                            botUserAdmin.send(`That's not a valid text channel! :cry:`);
+                        }
+                    },
+                    (error) => {
+                        botUserAdmin.send(`That's not a valid channel! :cry:`);
                     }
-                },
-                (error) => {
-                    botUserAdmin.send(`That's not a valid channel! :cry:`);
-                }
-            );
-        } else if(message.content.startsWith(SET_SERVER_IP_COMMAND)) {
-            command = message.content.split(" ");
-            if(command[2] == "" || command[2] == undefined) return;
-            if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(command[2])) {  
-                botUserAdmin.send(`Server ip succesfully set! :smiley:`);
-            }  
-        } else if(message.content.startsWith(SET_SERVER_PORT_COMMAND)) {
-            command = message.content.split(" ");
-            if(command[2] == "" || command[2] == undefined || !Number.isInteger(Number(command[2]))) return;
-            data.serverPort = command[2];
-            botUserAdmin.send(`Server port succesfully set! :smiley:`);
-        } else if(message.content == LIST_SERVER_USERS_COMMAND) {
-            
-            botUserAdmin.send(``);
-        } else if(message.content == ADD_SERVER_USER_COMMAND) {
-            
+                );
+            } else if(message.content.startsWith(SET_SERVER_IP_COMMAND)) {
+                command = message.content.split(" ");
+                if(command[2] == "" || command[2] == undefined) return;
+                if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(command[2])) {  
+                    botUserAdmin.send(`Server ip succesfully set! :smiley:`);
+                }  
+            } else if(message.content.startsWith(SET_SERVER_PORT_COMMAND)) {
+                command = message.content.split(" ");
+                if(command[2] == "" || command[2] == undefined || !Number.isInteger(Number(command[2]))) return;
+                data.serverPort = command[2];
+                botUserAdmin.send(`Server port succesfully set! :smiley:`);
+            } else if(message.content == LIST_SERVER_USERS_COMMAND) {
+                
+                botUserAdmin.send(``);
+            } else if(message.content == ADD_SERVER_USER_COMMAND) {
+                botWaitMode = true;
+            }    
         }
+        
     }
+
+    // Check for messages from the channel set to be listened to
+    
 
 })
 
+function encrypt(text) {
+    let cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { iv: iv.toString('hex'),
+    encryptedData: encrypted.toString('hex') };
+}
+
+function decrypt(text) {
+    let iv = Buffer.from(text.iv, 'hex');
+    let encryptedText = Buffer.from(text.encryptedData, 'hex');
+ 
+    let decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
+ 
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+ 
+    return decrypted.toString();
+}
 
 client.login(process.env.DISCORD_TOKEN);
