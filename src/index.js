@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
-import {createHmac} from 'crypto';
-import {Client, GatewayIntentBits, Partials, bold, codeBlock} from 'discord.js';
+import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { Client, GatewayIntentBits, Partials, bold, codeBlock } from 'discord.js';
 import {
     GREETING_MESSAGE, 
     SET_CHANNEL_COMMAND, 
@@ -17,13 +17,13 @@ let botUserAdmin;
 let botWaitMode = false;
 let botDataCounter = 1;
 
-const CRYTOP_ALGORITHM = 'aes-256-cbc';
-const CRYTOP_KEY = crypto.randomBytes(32);
-const CRYTOP_IV = crypto.randomBytes(16);
+const CRYPTO_ALGORITHM = 'aes-256-cbc';
+const CRYPTO_KEY = randomBytes(32);
+const CRYPTO_IV = randomBytes(16); 
 
 const data = {
-    channelToListen,
-    serverIp: "",
+    channelToListen: null,
+    serverIp: null,
     serverPort: "21",
     serverUsers: []
 }
@@ -48,8 +48,7 @@ client.on('ready', async () => {
 
 client.on("guildCreate", guild => {
     guild.fetchAuditLogs({type: 28, limit: 1}).then(log => {
-        botUserAdmin = log.entries.first().executor;
-        console.log(botUserAdmin);
+        // botUserAdmin = log.entries.first().executor;
         botUserAdmin.send(`
         ${GREETING_MESSAGE}             
         `).catch(e => console.error(e));
@@ -68,6 +67,11 @@ client.on("guildCreate", guild => {
 });
 
 client.on('messageCreate', async (message) => {
+
+    client.users.fetch(process.env.TESTING_USER, false).then((user) => {
+        botUserAdmin = user;
+    })
+
     // Check for DM messages from the BotAdmin 
     if(message.guild == null && message.author.id == process.env.TESTING_USER) {
         
@@ -135,24 +139,26 @@ client.on('messageCreate', async (message) => {
         
     }
 
-    // Check for messages from the channel set to be listened to
+    // Check for messages from the channel to be listened to
     
 
 })
 
 function encrypt(text) {
-    let cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
+    let cipher = createCipheriv(CRYPTO_ALGORITHM, Buffer.from(CRYPTO_KEY), CRYPTO_IV);
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
-    return { iv: iv.toString('hex'),
-    encryptedData: encrypted.toString('hex') };
+    return { 
+        iv: iv.toString('hex'),
+        encryptedData: encrypted.toString('hex') 
+    };
 }
 
 function decrypt(text) {
     let iv = Buffer.from(text.iv, 'hex');
     let encryptedText = Buffer.from(text.encryptedData, 'hex');
  
-    let decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
+    let decipher = createDecipheriv(CRYPTO_ALGORITHM, Buffer.from(CRYPTO_KEY), iv);
  
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
