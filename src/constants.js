@@ -5,7 +5,7 @@ Here are the commands you need to set before using me:`;
 
 const SET_CHANNEL_COMMAND = `!set channel`;
 const SET_SERVER_IP_COMMAND = `!set server ip`;
-const SET_SERVER_PORT_COMMAND = `set server port`;
+const SET_SERVER_PORT_COMMAND = `!set server port`;
 const ADD_SERVER_USER_COMMAND = `!add server user`;
 const DELETE_SERVER_USER_COMMAND = `!del server password`;
 const LIST_SERVER_USERS_COMMAND = `!list server users`;
