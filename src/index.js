@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import {createHmac} from 'crypto';
-import {Client, GatewayIntentBits, Partials, codeBlock} from 'discord.js';
+import {Client, GatewayIntentBits, Partials, bold, codeBlock} from 'discord.js';
 import {
     GREETING_MESSAGE, 
     SET_CHANNEL_COMMAND, 
@@ -123,7 +123,10 @@ client.on('messageCreate', async (message) => {
                 data.serverPort = command[2];
                 botUserAdmin.send(`Server port succesfully set! :smiley:`);
             } else if(message.content == LIST_SERVER_USERS_COMMAND) {
-                
+                botUserAdmin.send(bold("List of added users"));
+                for(let x of data.serverUsers) {
+                    botUserAdmin.send(`:white_check_mark: ${x.name}`);
+                }
                 botUserAdmin.send(``);
             } else if(message.content == ADD_SERVER_USER_COMMAND) {
                 botWaitMode = true;
