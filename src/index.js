@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
 import { Client, GatewayIntentBits, Partials, bold, codeBlock } from 'discord.js';
+import { NodeSSH } from 'node-ssh';
 import {
     GREETING_MESSAGE, 
     SET_CHANNEL_COMMAND, 
@@ -25,7 +26,7 @@ const CRYPTO_IV = randomBytes(16);
 const data = {
     channelToListen: null,
     serverIp: null,
-    serverPort: "21",
+    serverPort: "22",
     serverUsers: []
 }
 
@@ -53,7 +54,7 @@ client.on("guildCreate", async (guild) => {
         botUserAdmin.send(`
         ${codeBlock(SET_CHANNEL_COMMAND)}This command is used to set the channel where I'll check for the files to upload. To set the channel, add the channel ID after the command separating it by and space.
         ${codeBlock(SET_SERVER_IP_COMMAND)}This command is used to set the IP of the remote server I will connect to. To set the IP, add IP direction after the command separating it by and space.
-        ${codeBlock(SET_SERVER_PORT_COMMAND)}This command is used to set the port of the remote server I will connect to. To set the port, add the port number after the command separating it by and space. If you don't set this value, I will try to connect to the port 21.
+        ${codeBlock(SET_SERVER_PORT_COMMAND)}This command is used to set the port of the remote server I will connect to. To set the port, add the port number after the command separating it by and space. If you don't set this value, I will try to connect to the port 22.
         ${codeBlock(ADD_SERVER_USER_COMMAND)}This command is used to add a user of the VPS where the files will be uploaded. After you type this command, the first message will be stored as the username, and the second message as the password for that user. When you type this command, the bot will not work until you send the two messages. You can delete the messages where you wrote you username and password. And don't worry, the passwords are encrypted before being stored.
         ${codeBlock(LIST_SERVER_USERS_COMMAND)}This command is used to list all the users of the VPS where the bot will upload the files to.
         ${codeBlock(DELETE_SERVER_USER_COMMAND)}This command is used to delete a user from the list of users where the bot will upload the files to. To delete a user, add the username after the command separating it by and space.
@@ -211,6 +212,10 @@ function decrypt(text) {
 
 function getUrlExtension(url) {
     return url.split(/[#?]/)[0].split('.').pop().trim();
+}
+
+function uploadFile(host, username, port, password, file) {
+    NodeSSH.connect()
 }
 
 client.login(process.env.DISCORD_TOKEN);
