@@ -16,6 +16,7 @@ dotenv.config();
 let botUserAdmin, auxUsername, auxPassword;
 let botWaitMode = false;
 let botDataCounter = 1;
+let allowedFileExtensions = [];
 
 const CRYPTO_ALGORITHM = 'aes-256-cbc';
 const CRYPTO_KEY = randomBytes(32);
@@ -69,7 +70,11 @@ client.on('messageCreate', async (message) => {
 
     // Check for DM messages from the BotAdmin 
     if(message.guild == null && message.author.id == process.env.TESTING_USER) {
-           console.log(message.channelId);
+
+        // TEST
+        for(let file of message.attachments) {
+            console.log(getUrlExtension(file[1].url));
+        }
         // Check if the bot is waiting for the username or password (Waiting mode)
         if(botWaitMode) {
             //Check if the bot is waiting either for the username or the password
@@ -159,16 +164,28 @@ client.on('messageCreate', async (message) => {
                 }
             }
         }        
-    } else if(message.guild !== null && message.channelId == data.channelToListen) {
+    } else if(message.guild !== null && message.channelId == data.channelToListen) {  // Check for messages from the channel to be listened to
         if(data.channelToListen == null || data.serverIp == null || data.serverUsers.length == 0) {
             message.author.send(`:warning: The bot parameters are not properly configured. I can't upload your files until this issue is fixed. Ask the admin of the server to solve this problem.`);
         } else {
-            message.type
+            if(!message.attachments) return;
+            // The bot will upload all types of files to the VPS, you can add values to the array "allowedFileExtensions" to limit the types of file the bot will upload
+            if(allowedFileExtensions.length == 0) {
+                // Upload every file
+
+            } else {
+                for(let file of message.attachments) {
+                    for(let extension of allowedFileExtensions) {
+                        if(getUrlExtension(file[1].url) == extension) {
+                            // Upload files that have an allowed extension
+                            
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // Check for messages from the channel to be listened to
-    console.log(message.channelId);
 })
 
 function encrypt(text) {
@@ -190,6 +207,10 @@ function decrypt(text) {
     decrypted = Buffer.concat([decrypted, decipher.final()]);
  
     return decrypted.toString();
+}
+
+function getUrlExtension(url) {
+    return url.split(/[#?]/)[0].split('.').pop().trim();
 }
 
 client.login(process.env.DISCORD_TOKEN);
